@@ -25,3 +25,40 @@
 1. How would you trigger the execution of this code?
 
 
+---
+
+# Answer
+
+First, I would ask why you need to populate an additional meta field for this, as the URL is always the player ID (which aready exists). So, when outputting this information somewhere, we could simply output as such:
+
+```php
+<?php echo esc_url( 'http://www.nba-player-tv.com/channel/' . $player_external_id ); ?>
+```
+
+However, if it was required that this new meta field exist, we would need to query the players which do not have this set and set it using WP-CLI.
+
+```php
+// Args to query all players who do not have this field set, using WP_Query.
+$args = [
+    'post_type'      => 'player'
+    'posts_per_page' => -1,
+    'meta_query'     => [
+        'key'     => 'player_tv_url',
+        'compare' => 'NOT EXISTS',
+    ],
+];
+```
+
+From here, we would simply loop over the returned players and update the field using `update_post_meta()`.
+
+```php
+$player_external_id = get_post_meta( $player->ID, 'player_external_id', true );
+
+update_post_meta( $player->ID, 'player_tv_url', esc_url( 'http://www.nba-player-tv.com/channel/' . $player_external_id ) );
+```
+
+---
+
+All of this would be done using WP-CLI.
+
+Happy to write this in a more "real world" sceniero way, if needed.
